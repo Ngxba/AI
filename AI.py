@@ -58,8 +58,8 @@ class CF(object):
 
     def similarity(self):
         self.S = self.dist_func(self.Ybar.T, self.Ybar.T)
-        print("Similarity matrix : ")
-        print(self.S)
+        # print("Similarity matrix : ")
+        # print(self.S)
     
         
     def refresh(self):
@@ -115,28 +115,40 @@ class CF(object):
         # have not been rated by u yet. 
         # """
         ids = np.where(self.Y_data[:, 0] == u)[0]
-        items_rated_by_u = self.Y_data[ids, 1].tolist()              
+        # items was rated by user u
+        items_rated_by_u = self.Y_data[ids, 1].tolist()         
         recommended_items = []
+        ratings_items = []
+        # check predicting rating for item which user u haven't rated yet, if rating of that item > 0 
+        # => add to recommended_items
         for i in range(self.n_items):
             if i not in items_rated_by_u:
                 rating = self.__pred(u, i)
                 if rating > 0: 
+                    ratings_items.append(rating)
                     recommended_items.append(i)
-        
-        return recommended_items 
+
+        arr2D = np.array([ratings_items,recommended_items])
+        sortedArr = arr2D [ :, arr2D[0].argsort()]
+        choosen_item = []
+        top_ratings = []
+        for i in range(1,11):
+            choosen_item.append(int(sortedArr[1][len(ratings_items)-i]))
+            top_ratings.append(sortedArr[0][len(ratings_items)-i])
+        return choosen_item
 
     def print_recommendation(self):
         # """
         # print all items which should be recommended for each user 
         # """
         print('Recommendation: ')
-#         for u in range(self.n_users):
-#             recommended_items = self.recommend(u)
-#             if self.uuCF:
-# #                 temp = [a[i] for i in recommended_items]
-#                 print(' Recommend item(s):', recommended_items , 'for user', u)
-#             else: 
-#                 print(' Recommend item', u, 'for user(s) : ', recommended_items)
+        for u in range(self.n_users):
+            recommended_items = self.recommend(u)
+            if self.uuCF:
+#                 temp = [a[i] for i in recommended_items]
+                print(' Recommend item(s):', recommended_items , 'for user', u)
+            else: 
+                print(' Recommend item', u, 'for user(s) : ', recommended_items)
 
 
 
@@ -157,9 +169,8 @@ r_cols = ['user_id', 'item_id', 'rating', 'timestam']
 
 ratings = pd.read_csv("u.data", sep = '\t', names = r_cols, encoding='latin-1')
 ratings = ratings.drop(['timestam'], axis=1)
-# print(ratings.head())
 Y_data = ratings.as_matrix()
-# print(Y_data)
+print(Y_data)
 
 rs = CF(Y_data, k = 2, uuCF = 1)
 rs.fit()
