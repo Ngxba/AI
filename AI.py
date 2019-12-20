@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd 
 import numpy as np
+from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy import sparse
 
@@ -9,9 +10,8 @@ class CF(object):
     # """docstring for CF
     # input: matrix ['user_id', 'item_id', 'score']
     # k: số item được recommend"""
-    def __init__(self, Y_data, k, dist_func = cosine_similarity, uuCF = 1):
-        self.uuCF = uuCF # user-user (1) or item-item (0) CF
-        self.Y_data = Y_data if uuCF else Y_data[:, [1, 0, 2]]
+    def __init__(self, Y_data, k, dist_func = cosine_similarity):
+        self.Y_data = Y_data
         self.k = k
         self.dist_func = dist_func
         self.Ybar_data = None
@@ -103,8 +103,8 @@ class CF(object):
         # predict the rating of user u for item i (normalized)
         # if you need the un
         # """
-        if self.uuCF: return self.__pred(u, i, normalized)
-        return self.__pred(i, u, normalized)
+        return self.__pred(u, i, normalized)
+
             
     
     def recommend(self, u):
@@ -142,13 +142,11 @@ class CF(object):
         # print all items which should be recommended for each user 
         # """
         print('Recommendation: ')
-        for u in range(self.n_users):
-            recommended_items = self.recommend(u)
-            if self.uuCF:
-#                 temp = [a[i] for i in recommended_items]
-                print(' Recommend item(s):', recommended_items , 'for user', u)
-            else: 
-                print(' Recommend item', u, 'for user(s) : ', recommended_items)
+        recommended_items = self.recommend(200)
+        print(' Recommend item(s):', recommended_items , 'for user', 200)
+        # for u in range(self.n_users):
+        #     recommended_items = self.recommend(u)
+        #     print(' Recommend item(s):', recommended_items , 'for user', u)
 
 
 
@@ -167,16 +165,29 @@ r_cols = ['user_id', 'item_id', 'rating', 'timestam']
 # dataframe = pd.merge(df,movie_titles,on='item_id')
 # print(dataframe.head())
 
-ratings = pd.read_csv("u.data", sep = '\t', names = r_cols, encoding='latin-1')
+print("TRAINING")
+
+ratings = pd.read_csv("u_data_train", sep = '\t', names = r_cols, encoding='latin-1')
 ratings = ratings.drop(['timestam'], axis=1)
 Y_data = ratings.as_matrix()
-print(Y_data)
+X = ratings[["user_id","item_id"]]
+Y = ratings["rating"]
+x_train , x_test, y_train, y_test  = train_test_split(X,Y,test_size = 0.2 )
+print(len(x_train), len(x_test), len(y_train), len(y_test))
 
-rs = CF(Y_data, k = 2, uuCF = 1)
+rs = CF(Y_data, k = 2)
 rs.fit()
-
 rs.print_recommendation()
 
+# print("TESTING")
+
+# ratings = pd.read_csv("u_data_test", sep = '\t', names = r_cols, encoding='latin-1')
+# ratings = ratings.drop(['timestam'], axis=1)
+# Y_data = ratings.as_matrix()
+
+# rs = CF(Y_data, k = 2)
+# rs.fit()
+# rs.print_recommendation()
 
 
 
