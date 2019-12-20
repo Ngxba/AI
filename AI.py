@@ -10,10 +10,11 @@ class CF(object):
     # """docstring for CF
     # input: matrix ['user_id', 'item_id', 'score']
     # k: số item được recommend"""
-    def __init__(self, Y_data, k, dist_func = cosine_similarity):
+    def __init__(self, Y_data, listOfMovieTitle , k, dist_func = cosine_similarity):
         self.Y_data = Y_data
         self.k = k
         self.dist_func = dist_func
+        self.listOfMovieTitle = listOfMovieTitle
         self.Ybar_data = None
         # number of users and items. Remember to add 1 since id starts from 0
         self.n_users = int(np.max(self.Y_data[:, 0])) + 1 
@@ -142,11 +143,14 @@ class CF(object):
         # print all items which should be recommended for each user 
         # """
         print('Recommendation: ')
-        recommended_items = self.recommend(200)
-        print(' Recommend item(s):', recommended_items , 'for user', 200)
-        # for u in range(self.n_users):
-        #     recommended_items = self.recommend(u)
-        #     print(' Recommend item(s):', recommended_items , 'for user', u)
+        # recommended_items = self.recommend(200)
+        # print(' Recommend item(s):', recommended_items , 'for user', 200)
+        for u in range(self.n_users):
+            listOfFilm = []
+            recommended_items = self.recommend(u)
+            for i in recommended_items:
+                listOfFilm.append(self.listOfMovieTitle[i-1])
+            print(' Recommend item(s):', listOfFilm , 'for user', u)
 
 
 
@@ -167,15 +171,19 @@ r_cols = ['user_id', 'item_id', 'rating', 'timestam']
 
 print("TRAINING")
 
-ratings = pd.read_csv("u_data_train", sep = '\t', names = r_cols, encoding='latin-1')
+ratings = pd.read_csv("u.data", sep = '\t', names = r_cols, encoding='latin-1')
 ratings = ratings.drop(['timestam'], axis=1)
 Y_data = ratings.as_matrix()
-X = ratings[["user_id","item_id"]]
-Y = ratings["rating"]
-x_train , x_test, y_train, y_test  = train_test_split(X,Y,test_size = 0.2 )
-print(len(x_train), len(x_test), len(y_train), len(y_test))
 
-rs = CF(Y_data, k = 2)
+movie_title = pd.read_csv("Movie_Id_Titles")
+movie_title = movie_title.as_matrix()
+listOfMovieTitle = movie_title[:, 1]
+# X = ratings[["user_id","item_id"]]
+# Y = ratings["rating"]
+# x_train , x_test, y_train, y_test  = train_test_split(X,Y,test_size = 0.2 )
+# print(len(x_train), len(x_test), len(y_train), len(y_test))
+
+rs = CF(Y_data, listOfMovieTitle, k = 2)
 rs.fit()
 rs.print_recommendation()
 
